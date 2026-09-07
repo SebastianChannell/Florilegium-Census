@@ -6,6 +6,8 @@
   "observability": { "enabled": true },
   "vars": {
     "AIRTABLE_BASE_ID": "appEBrDjSYL5WYWft",
-    "AIRTABLE_BOOKS_TABLE_ID": "tblvrnyppX9Q9Od3H"
+    "AIRTABLE_BOOKS_TABLE_ID": "tblvrnyppX9Q9Od3H",
+    "AIRTABLE_AUTHORS_TABLE_ID": "tblxgMtFAWxk1kTNp",
+    "AIRTABLE_CLASSIFICATIONS_TABLE_ID": "tblWlQFiehNFHFgZ5"
   }
 }
