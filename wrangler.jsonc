@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "florilegium-census",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-07",
+  "observability": { "enabled": true },
+  "vars": {
+    "AIRTABLE_BASE_ID": "appEBrDjSYL5WYWft",
+    "AIRTABLE_BOOKS_TABLE_ID": "tblvrnyppX9Q9Od3H"
+  }
+}
