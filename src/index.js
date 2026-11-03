@@ -6,6 +6,19 @@ const html = `<!doctype html><html lang="en"><head><meta charset="utf-8" /><meta
 .florilegium-menu summary{display:flex;align-items:center;justify-content:center;gap:.42rem;width:auto;min-width:0;height:auto;min-height:2rem;padding:0 .58rem;font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
 .florilegium-menu-chevron{width:.38rem;height:.38rem;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg) translate(-.08rem,-.08rem);transition:transform 140ms ease}
 .florilegium-menu[open] .florilegium-menu-chevron{transform:rotate(225deg) translate(-.02rem,-.02rem)}
+
+/* Compact shared Sites picker from Librarium. */
+.florilegium-menu>summary{display:flex;align-items:center;justify-content:center;gap:.42rem;width:auto;min-width:0;height:auto;min-height:2rem;padding:0 .58rem;border:1px solid #292424;border-radius:.25rem;background:#0d0b0b;color:#9d9791;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:.62rem;font-weight:700;letter-spacing:.12em;line-height:1.2;text-transform:uppercase}
+.florilegium-menu>summary:hover,.florilegium-menu[open]>summary{border-color:#8451cf;background:#121010;color:#ece9e5}
+.florilegium-menu>summary:focus-visible,.florilegium-menu nav a:focus-visible{outline:2px solid #8451cf;outline-offset:3px}
+.florilegium-menu nav{top:calc(100% + .35rem);right:0;width:min(18rem,calc(100vw - 2rem));max-height:calc(100dvh - 4rem);overflow-y:auto;padding:.4rem;border:1px solid #292424;border-radius:.35rem;background:#0d0b0b;box-shadow:0 .8rem 2rem rgba(0,0,0,.4);text-align:left}
+.florilegium-menu nav p{display:block;margin:.2rem .5rem .35rem;padding:0;border:0;color:#6f6964;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:.66rem;font-weight:400;letter-spacing:.11em;text-transform:uppercase}
+.florilegium-menu nav a{display:block;min-height:0;margin:0;padding:.45rem .6rem;border:0;border-radius:.2rem;background:transparent;box-shadow:none;color:#ece9e5;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:.83rem;font-weight:400;letter-spacing:normal;line-height:1.5;text-decoration:none;text-transform:none}
+.florilegium-menu nav a+a{border:0}
+.florilegium-menu nav a[aria-current="page"]:after{content:none}
+.florilegium-menu nav a:hover,.florilegium-menu nav a[aria-current="page"],.florilegium-menu nav a:focus-visible{background:#121010;color:#8451cf;box-shadow:none}
+.florilegium-menu-chevron{display:inline-block;width:.38rem;height:.38rem;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg)}
+.florilegium-menu[open] .florilegium-menu-chevron{transform:rotate(225deg)}
 </style>
 </head><body><main class="shell"><header class="site-header">
 <a class="wordmark" href="/" aria-label="Census home">
