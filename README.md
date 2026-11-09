@@ -1,54 +1,39 @@
-# Census
+# Census — Sacrum Florilegium
 
-**Census** is the statistics and analytics layer for Sacrum Florilegium.
+Census is the statistics and analytics layer for Sacrum Florilegium.
+It runs as a mobile-first Cloudflare Worker.
 
-Version 1 implements the **Librarium** module. The application is a mobile-first Cloudflare Worker that reads the existing Airtable Librarium base server-side and renders live collection statistics without exposing the Airtable token to the browser.
+## Source of data
 
-## Current Librarium dashboard
+Census does **not** call Airtable on page views. Its `/api/stats` route reads
+the shared, precomputed JSON snapshot in the existing Cloudflare R2 bucket:
 
-- Total books
-- Total authors
-- Total subjects
-- Total languages
-- Books by classification
-- Top 5 subjects
-- Language distribution
-- Top 5 authors
-- Recently added books
-- Metadata health: searchable text, OCR, cover, author, classification, subjects, edition year, publisher
-- Published and draft record counts
+- R2 bucket: `sacrum-assets`
+- R2 key: `system/librarium/catalog-snapshot-v1.json`
+- Source of truth: Airtable Librarium base
+- Snapshot producer: Florilegium-Librarium's daily (06:00 UTC) import or its
+  authorized **Import & refresh** button
 
-## Architecture
+The R2 bucket is bound to Census as `LIBRARY_BUCKET`. There are **no Airtable
+credentials required for Census**.
 
-`Airtable Librarium → Cloudflare Worker → census.sacrumflorilegium.com`
+## Available statistics
 
-The Worker uses the existing Airtable base and Books table IDs configured in `wrangler.jsonc`.
+The precomputed snapshot preserves the existing dashboard output: totals for
+books, authors, subjects, and languages; published and draft counts; classifications,
+top subjects and authors; recent books; and metadata completeness checks.
+The snapshot stores these statistics instead of the full unpublished book records.
 
-## Required secret
+If the snapshot has never been created, `/api/stats` responds with HTTP 503 and
+a clear message. This is expected while Airtable's monthly API quota is exhausted
+and the initial snapshot cannot be generated. The Librarium daily sync (or
+authorized manual refresh) will initialize it once API access becomes available.
 
-Set the Airtable personal access token as a Cloudflare Worker secret named:
-
-```sh
-npx wrangler secret put AIRTABLE_TOKEN
-```
-
-The token should have read access to the Librarium base. Do not put the token in source control.
-
-## Development
+## Deployment
 
 ```sh
 npm install
-npm run dev
-```
-
-## Deploy
-
-```sh
 npm run deploy
 ```
 
-After deployment, attach the custom domain `census.sacrumflorilegium.com` to the `florilegium-census` Worker in Cloudflare.
-
-## Future modules
-
-Census is intentionally structured as an umbrella dashboard. Orarium, Officium, Biblia, and Propria can be added later without changing Librarium's Airtable source of truth.
+Cloudflare Worker: `florilegium-census`.
