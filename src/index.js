@@ -50,7 +50,7 @@ const vertical=(id,data)=>{const max=Math.max(1,...data.map(x=>x.count));documen
 const donut=(id,data)=>{const total=data.reduce((n,x)=>n+x.count,0);if(!total){document.getElementById(id).innerHTML='<div class="meta">No data</div>';return}let angle=0;const stops=data.map((x,i)=>{const start=angle;angle+=x.count/total*360;return palette[i%palette.length]+' '+start.toFixed(1)+'deg '+angle.toFixed(1)+'deg'}).join(',');const summary=data.map(x=>x.name+': '+x.count).join(', ');const legend=data.map((x,i)=>'<div class="legend-row" style="--bar:'+palette[i%palette.length]+'"><span class="legend-swatch"></span><span class="legend-name">'+esc(x.name)+'</span><span class="legend-value">'+Math.round(x.count/total*100)+'%</span></div>').join('');document.getElementById(id).innerHTML='<div class="donut-wrap"><div class="donut" role="img" aria-label="'+esc(summary)+'" style="background:conic-gradient('+stops+')"><div class="donut-center"><div class="donut-total">'+total+'</div><div class="donut-caption">Books</div></div></div><div class="legend">'+legend+'</div></div>'};
 const lollipops=(id,data)=>{const max=Math.max(1,...data.map(x=>x.count));document.getElementById(id).innerHTML=data.map((x,i)=>{const pct=Math.max(5,Math.round(x.count/max*92));return '<div class="lollipop" style="--pct:'+pct+';--bar:'+palette[i%palette.length]+'"><div class="name"><span class="lollipop-rank">'+(i+1)+'</span>'+esc(x.name)+'</div><div class="lollipop-track" role="img" aria-label="'+esc(x.name)+': '+x.count+'"><span class="lollipop-line"></span><span class="lollipop-dot"></span></div><div class="count">'+x.count+'</div></div>'}).join('')||'<div class="meta">No data</div>'};
 const health=(data,total)=>{document.getElementById('health').innerHTML=data.map(x=>{const color=x.percent>=85?'#668f85':x.percent>=60?'#9a8a62':'#9b6868';const missing=Array.isArray(x.missing)?x.missing:[];const detail=missing.length?'<ul class="missing-list">'+missing.map(title=>'<li>'+esc(title)+'</li>').join('')+'</ul>':'<div class="complete-note">No books are missing this information.</div>';return '<details class="health-detail" style="--bar:'+color+'"><summary aria-label="Show books missing '+esc(x.name)+'"><span class="health-top"><span class="health-title">'+esc(x.name)+'</span><span>'+x.percent+'%</span></span><span class="track" role="img" aria-label="'+esc(x.name)+': '+x.percent+' percent complete"><span class="fill" style="display:block;width:'+x.percent+'%"></span></span><small>'+x.complete+' of '+total+' records complete · '+missing.length+' missing</small></summary>'+detail+'</details>'}).join('')};
-async function load(){try{const r=await fetch('/api/stats');if(!r.ok)throw new Error(await r.text());const d=await r.json();document.getElementById('stats').innerHTML=[['Books',d.totalBooks],['Authors',d.totalAuthors],['Subjects',d.totalSubjects],['Languages',d.totalLanguages]].map(([l,n])=>'<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>').join('');rows('classifications',d.classifications);vertical('subjects',d.topSubjects);donut('languages',d.languages);lollipops('authors',d.topAuthors);health(d.health,d.totalBooks);document.getElementById('recent').innerHTML=d.recent.map(b=>'<article class="book"><div class="book-title">'+esc(b.title)+'</div><div class="meta">'+esc([b.author,b.language,b.dateAdded].filter(Boolean).join(' · '))+'</div></article>').join('');document.getElementById('status').textContent='Live from Airtable · '+d.publishedBooks+' published · '+d.draftBooks+' draft'}catch(e){const s=document.getElementById('status');s.classList.add('error');s.textContent='Census could not load Airtable data: '+e.message}}load();
+async function load(){try{const r=await fetch('/api/stats');if(!r.ok)throw new Error(await r.text());const d=await r.json();document.getElementById('stats').innerHTML=[['Books',d.totalBooks],['Authors',d.totalAuthors],['Subjects',d.totalSubjects],['Languages',d.totalLanguages]].map(([l,n])=>'<div class="stat"><div class="n">'+n+'</div><div class="l">'+l+'</div></div>').join('');rows('classifications',d.classifications);vertical('subjects',d.topSubjects);donut('languages',d.languages);lollipops('authors',d.topAuthors);health(d.health,d.totalBooks);document.getElementById('recent').innerHTML=d.recent.map(b=>'<article class="book"><div class="book-title">'+esc(b.title)+'</div><div class="meta">'+esc([b.author,b.language,b.dateAdded].filter(Boolean).join(' · '))+'</div></article>').join('');document.getElementById('status').textContent='R2 catalog snapshot · '+d.publishedBooks+' published · '+d.draftBooks+' draft'}catch(e){const s=document.getElementById('status');s.classList.add('error');s.textContent='Census snapshot unavailable: '+e.message}}load();
 </script></body></html>`;
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -60,132 +60,27 @@ function json(data, status = 200) {
       "cache-control": status >= 400 ? "no-store" : "public, max-age=120",
     },
   });
-}function countBy(items) {
-  const m = new Map();
-  for (const x of items.flat()) if (x) m.set(x, (m.get(x) || 0) + 1);
-  return [...m]
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-}async function fetchTable(env, tableId, token) {
-  let offset = "";
-  const all = [];
-  do {
-    const u = new URL(
-      "https://api.airtable.com/v0/" + env.AIRTABLE_BASE_ID + "/" + tableId,
-    );
-    u.searchParams.set("pageSize", "100");
-    if (offset) u.searchParams.set("offset", offset);
-    const r = await fetch(u, { headers: { Authorization: "Bearer " + token } });
-    if (!r.ok)
-      throw new Error("Airtable " + r.status + ": " + (await r.text()));
-    const d = await r.json();
-    all.push(...d.records);
-    offset = d.offset || "";
-  } while (offset);
-  return all;
-}function stats(booksRaw, authorsRaw, classesRaw) {
-  const authorMap = new Map(
-    authorsRaw.map((r) => [r.id, r.fields.Name || r.id]),
-  );
-  const classMap = new Map(
-    classesRaw.map((r) => [r.id, r.fields.Class || r.id]),
-  );
-  const books = booksRaw.map((r) => ({ id: r.id, ...r.fields }));
-  const linked = (value, map) =>
-    Array.isArray(value)
-      ? value.map((id) => map.get(id) || id).filter(Boolean)
-      : [];
-  const classifications = countBy(
-    books.map((b) => linked(b.Classification, classMap)),
-  );
-  const subjects = countBy(
-    books.map((b) => (Array.isArray(b.Subjects) ? b.Subjects : [])),
-  );
-  const languages = countBy(books.map((b) => [b.Language].filter(Boolean)));
-  const authors = countBy(books.map((b) => linked(b.Authors, authorMap)));
-  const complete = (name, test) => {
-    const missing = books
-      .filter((b) => !test(b))
-      .map((b) => b.Title || "Untitled")
-      .sort((a, b) => a.localeCompare(b));
-    const n = books.length - missing.length;
-    return {
-      name,
-      complete: n,
-      percent: books.length ? Math.round((n / books.length) * 100) : 0,
-      missing,
-    };
-  };
-  const status = books.map((b) => b.Status || "");
-  return {
-    totalBooks: books.length,
-    publishedBooks: status.filter((x) => x === "Published").length,
-    draftBooks: status.filter((x) => x === "Draft").length,
-    totalAuthors: authors.length,
-    totalSubjects: subjects.length,
-    totalLanguages: languages.length,
-    classifications,
-    topSubjects: subjects.slice(0, 5),
-    languages,
-    topAuthors: authors.slice(0, 5),
-    health: [
-      complete("Searchable text", (b) => !!b["Searchable Text"]),
-      complete("OCR", (b) => !!b.OCR),
-      complete("Cover available", (b) => !!b["Cover URL"]),
-      complete(
-        "Author identified",
-        (b) => linked(b.Authors, authorMap).length > 0,
-      ),
-      complete(
-        "Classification",
-        (b) => linked(b.Classification, classMap).length > 0,
-      ),
-      complete(
-        "Subjects",
-        (b) => Array.isArray(b.Subjects) && b.Subjects.length > 0,
-      ),
-      complete("Edition year", (b) => !!b["Edition Year"]),
-      complete("Publisher", (b) => !!b.Publisher),
-    ],
-    recent: books
-      .slice()
-      .sort(
-        (a, b) =>
-          String(b["Date Added"] || "").localeCompare(
-            String(a["Date Added"] || ""),
-          ) || String(b.id).localeCompare(String(a.id)),
-      )
-      .slice(0, 6)
-      .map((b) => ({
-        title: b.Title || "Untitled",
-        author: linked(b.Authors, authorMap).join(", "),
-        language: b.Language || "",
-        dateAdded: b["Date Added"] || "",
-      })),
-  };
-}export default {
+}
+const CATALOG_SNAPSHOT_KEY = "system/librarium/catalog-snapshot-v1.json";
+export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/stats") {
       try {
-        const binding = env.AIRTABLE_TOKEN;
-        if (!binding) throw new Error("AIRTABLE_TOKEN is not configured");
-        const token =
-          typeof binding === "string"
-            ? binding
-            : typeof binding.get === "function"
-              ? await binding.get()
-              : "";
-        if (!token) throw new Error("AIRTABLE_TOKEN is not configured");
-        const [books, authors, classes] = await Promise.all([
-          fetchTable(env, env.AIRTABLE_BOOKS_TABLE_ID, token),
-          fetchTable(env, env.AIRTABLE_AUTHORS_TABLE_ID, token),
-          fetchTable(env, env.AIRTABLE_CLASSIFICATIONS_TABLE_ID, token),
-        ]);
-        return json(stats(books, authors, classes));
+        const object = await env.LIBRARY_BUCKET.get(CATALOG_SNAPSHOT_KEY);
+        if (!object) {
+          return json({ error: "Catalog snapshot has not yet been initialized. Run the authorized Librarium import after Airtable access is restored." }, 503);
+        }
+        const snapshot = await object.json();
+        if (snapshot.version !== 1 || !snapshot.census ||
+            typeof snapshot.census.totalBooks !== "number") {
+          throw new Error("Invalid R2 catalog snapshot.");
+        }
+        return json({ ...snapshot.census, snapshotGeneratedAt: snapshot.generatedAt });
       } catch (e) {
-        return json({ error: e.message }, 500);
-      }    }    if (url.pathname === "/health") return new Response("ok");
+        return json({ error: e instanceof Error ? e.message : String(e) }, 503);
+      }
+    }    if (url.pathname === "/health") return new Response("ok");
     return new Response(html, {
       headers: {
         "content-type": "text/html; charset=utf-8",
