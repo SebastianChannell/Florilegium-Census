@@ -6,17 +6,10 @@
   "observability": {
     "enabled": true
   },
-  "vars": {
-    "AIRTABLE_BASE_ID": "appEBrDjSYL5WYWft",
-    "AIRTABLE_BOOKS_TABLE_ID": "tblvrnyppX9Q9Od3H",
-    "AIRTABLE_AUTHORS_TABLE_ID": "tblxgMtFAWxk1kTNp",
-    "AIRTABLE_CLASSIFICATIONS_TABLE_ID": "tblWlQFiehNFHFgZ5"
-  },
-  "secrets_store_secrets": [
+  "r2_buckets": [
     {
-      "binding": "AIRTABLE_TOKEN",
-      "store_id": "4aa4892a2c3f4e11a7244a6f8fce01e9",
-      "secret_name": "AIRTABLE_TOKEN"
+      "binding": "LIBRARY_BUCKET",
+      "bucket_name": "sacrum-assets"
     }
   ]
 }
